@@ -39,6 +39,10 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
     @objc public enum DrawerState: Int {
         case opened, closed
     }
+    
+    @objc public enum DrawerPresentationStyle: Int {
+        case overlay, push
+    }
 
     /**************************************************************************/
     // MARK: - Properties
@@ -55,6 +59,8 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
     private var _drawerConstraint: NSLayoutConstraint!
     
     private var _drawerWidthConstraint: NSLayoutConstraint!
+    
+    private var _mainConstraint: NSLayoutConstraint!
     
     private var _panStartLocation = CGPoint.zero
     
@@ -106,6 +112,22 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
     }()
     
     public weak var delegate: KYDrawerControllerDelegate?
+    
+    public var drawerPresentationStyle: DrawerPresentationStyle = .overlay {
+        didSet {
+            guard let drawerViewController = self.drawerViewController else {
+                return
+            }
+            switch drawerPresentationStyle {
+            case .overlay:
+                drawerViewController.view.layer.shadowColor   = UIColor.black.cgColor
+                break
+            case .push:
+                drawerViewController.view.layer.shadowColor   = UIColor.clear.cgColor
+                break
+            }
+        }
+    }
     
     public var drawerDirection: DrawerDirection = .left {
         didSet {
@@ -159,14 +181,29 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
                     views: viewDictionary
                 )
             )
-            view.addConstraints(
-                NSLayoutConstraint.constraints(
-                    withVisualFormat: "H:|-0-[mainView]-0-|",
-                    options: [],
-                    metrics: nil,
-                    views: viewDictionary
-                )
+            
+            let mainWidthConstraint = NSLayoutConstraint(
+                item: mainViewController.view,
+                attribute: NSLayoutAttribute.width,
+                relatedBy: NSLayoutRelation.equal,
+                toItem: view,
+                attribute: NSLayoutAttribute.width,
+                multiplier: 1,
+                constant: 0
             )
+            view.addConstraint(mainWidthConstraint)
+            
+            _mainConstraint = NSLayoutConstraint(
+                item: mainViewController.view,
+                attribute: NSLayoutAttribute.left,
+                relatedBy: NSLayoutRelation.equal,
+                toItem: view,
+                attribute: NSLayoutAttribute.left,
+                multiplier: 1,
+                constant: 0
+            )
+            view.addConstraint(_mainConstraint)
+
 
             mainViewController.didMove(toParentViewController: self)
         }
@@ -343,6 +380,10 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
                 case .closed:
                     self._drawerConstraint.constant     = 0
                     self._containerView.backgroundColor = UIColor(white: 0, alpha: 0)
+                    
+                    if self.drawerPresentationStyle == .push {
+                        self._mainConstraint.constant = 0
+                    }
                 case .opened:
                     let constant: CGFloat
                     switch self.drawerDirection {
@@ -356,8 +397,16 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
                         white: 0
                         , alpha: self.containerViewMaxAlpha
                     )
+                    
+                    if self.drawerPresentationStyle == .push {
+                        self._mainConstraint.constant = constant
+                    }
                 }
                 self._containerView.layoutIfNeeded()
+                
+                if self.drawerPresentationStyle == .push {
+                    self.view.layoutIfNeeded()
+                }
             }) { (finished: Bool) -> Void in
                 if state == .closed {
                     self._containerView.isHidden = true
@@ -402,6 +451,10 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
         }
         
         _drawerConstraint.constant = constant
+        
+        if self.drawerPresentationStyle == .push {
+            _mainConstraint.constant = constant
+        }
         _containerView.backgroundColor = UIColor(
             white: 0,
             alpha: backGroundAlpha
