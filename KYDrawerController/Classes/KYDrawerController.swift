@@ -376,6 +376,11 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
             drawerViewController?.beginAppearanceTransition(isAppearing, animated: animated)
             mainViewController?.beginAppearanceTransition(!isAppearing, animated: animated)
         }
+        
+        // hackish method to solve problem with UIBarButtonItem appearing at the edge of the screen
+        if state == .closed {
+            self.mainViewController?.endAppearanceTransition()
+        }
 
         UIView.animate(withDuration: duration,
             delay: 0,
@@ -418,6 +423,11 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
                 }
                 self.drawerViewController?.endAppearanceTransition()
                 self.mainViewController?.endAppearanceTransition()
+                
+                if state == .opened {
+                    self.mainViewController?.endAppearanceTransition()
+                }
+                
                 self._isAppearing = nil
                 self.delegate?.drawerController?(self, stateChanged: state)
         }
