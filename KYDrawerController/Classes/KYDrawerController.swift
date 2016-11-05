@@ -193,6 +193,11 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
             )
             view.addConstraint(mainWidthConstraint)
             
+            var initialMainConstraintConstant: CGFloat = 0
+            if let constraint = _mainConstraint {
+                initialMainConstraintConstant = constraint.constant
+            }
+            
             _mainConstraint = NSLayoutConstraint(
                 item: mainViewController.view,
                 attribute: NSLayoutAttribute.left,
@@ -200,10 +205,10 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
                 toItem: view,
                 attribute: NSLayoutAttribute.left,
                 multiplier: 1,
-                constant: 0
+                constant: initialMainConstraintConstant
             )
             view.addConstraint(_mainConstraint)
-
+            view.layoutIfNeeded()
 
             mainViewController.didMove(toParentViewController: self)
         }
