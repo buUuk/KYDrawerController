@@ -424,10 +424,6 @@ open class KYDrawerController: UIViewController, UIGestureRecognizerDelegate {
                 self.drawerViewController?.endAppearanceTransition()
                 self.mainViewController?.endAppearanceTransition()
                 
-                if state == .opened {
-                    self.mainViewController?.endAppearanceTransition()
-                }
-                
                 self._isAppearing = nil
                 self.delegate?.drawerController?(self, stateChanged: state)
         }
